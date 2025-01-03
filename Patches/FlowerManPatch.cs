@@ -25,13 +25,29 @@ namespace BrandonLeeBracken.Patches
             var spriteRenderer = __instance.gameObject.AddComponent<SpriteRenderer>();
             spriteRenderer.sprite = BrandonLeeBrackenBase.Instance.relaxedSprite;
 
-            // size testing
+            // TESTING
             __instance.transform.localScale = Vector3.one;
 
             // setup new audio
-            SoundTool.ReplaceAudioClip("Scan", BrandonLeeBrackenBase.Instance.relaxedClips[0]);
+            // chances are (1f / number of  clips) for easy dynamic size of clips lists
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
+                SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.killClips)
+                SoundTool.ReplaceAudioClip("CrackNeck", audioClip, 1f / BrandonLeeBrackenBase.Instance.killClips.Count);
+            SoundTool.ReplaceAudioClip("Angered", BrandonLeeBrackenBase.Instance.angryClip, 1f);
 
             BrandonLeeBrackenBase.LogMessage("Done!", BepInEx.Logging.LogLevel.Debug);
         }
+
+        /*
+        [HarmonyPatch("Update"), HarmonyPostfix]
+        internal static void UpdatePostFix(ref FlowermanAI __instance)
+        {
+            BrandonLeeBrackenBase.LogMessage(
+                $"Current behaviour state: {__instance.currentBehaviourStateIndex}", 
+                BepInEx.Logging.LogLevel.Debug
+            );
+        }
+        */
     }
 }

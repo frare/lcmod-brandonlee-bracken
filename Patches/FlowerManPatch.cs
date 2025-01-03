@@ -27,14 +27,18 @@ namespace BrandonLeeBracken.Patches
 
             // TESTING
             __instance.transform.localScale = Vector3.one;
+            if (BrandonLeeBrackenBase.Instance.killClips[0] != null)
+                AudioSource.PlayClipAtPoint(BrandonLeeBrackenBase.Instance.killClips[0], __instance.transform.position);
 
             // setup new audio
             // chances are (1f / number of  clips) for easy dynamic size of clips lists
+            /*
             foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
                 SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
             foreach (var audioClip in BrandonLeeBrackenBase.Instance.killClips)
                 SoundTool.ReplaceAudioClip("CrackNeck", audioClip, 1f / BrandonLeeBrackenBase.Instance.killClips.Count);
             SoundTool.ReplaceAudioClip("Angered", BrandonLeeBrackenBase.Instance.angryClip, 1f);
+            */
 
             BrandonLeeBrackenBase.LogMessage("Done!", BepInEx.Logging.LogLevel.Debug);
         }

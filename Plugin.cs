@@ -1,8 +1,8 @@
-﻿using BepInEx;
+﻿using LCSoundTool;
+using BepInEx;
 using BepInEx.Logging;
 using BrandonLeeBracken.Patches;
 using HarmonyLib;
-using LCSoundTool;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -35,6 +35,8 @@ namespace BrandonLeeBracken
         internal List<AudioClip> killClips = new List<AudioClip>();
         internal AudioClip angryClip;
 
+        internal AudioClip testClip;
+
         private void Awake()
         {
             if (Instance == null) Instance = this;
@@ -45,9 +47,10 @@ namespace BrandonLeeBracken
             LoadCustomTextures();
             LoadCustomAudioClips();
             // AssetBundle.UnloadAllAssetBundles(false);
-            SoundTool.ReplaceAudioClip("Scan", killClips[0], 1f);
 
-            harmony.PatchAll(typeof(BrandonLeeBrackenBase));
+            SoundTool.ReplaceAudioClip("Scan", testClip, 1f);
+
+            // harmony.PatchAll(typeof(BrandonLeeBrackenBase));
             harmony.PatchAll(typeof(FlowerManPatch));
             // harmony.PatchAll(typeof(PlayerControllerBPatch));
         }
@@ -64,6 +67,8 @@ namespace BrandonLeeBracken
 
             foreach (string assetName in CustomTextures.GetAllAssetNames())
             {
+                logger.LogDebug("Found asset: " + assetName);
+
                 Texture2D texture = CustomTextures.LoadAsset<Texture2D>(assetName);
                 Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, 0f));
 
@@ -91,18 +96,19 @@ namespace BrandonLeeBracken
 
             foreach (string assetName in CustomAudio.GetAllAssetNames())
             {
+                logger.LogDebug("Found asset: " + assetName);
+
                 if (assetName.Contains("fleeing")) fleeingClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
                 else if (assetName.Contains("kill")) killClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
                 else if (assetName.Contains("angry")) angryClip = CustomAudio.LoadAsset<AudioClip>(assetName);
+                else if (assetName.Contains("test")) testClip = CustomAudio.LoadAsset<AudioClip>(assetName);
                 else logger.LogWarning("Found an asset in audio bundle that does not match any category");
             }
 
-            if (fleeingClips.Count == 0 || killClips.Count == 0)
+            if (fleeingClips.Count == 0 || killClips.Count == 0 || angryClip == null)
                 logger.LogError("Failed to load custom audio");
             else
                 logger.LogDebug("Custom audio loaded!");
-
-            SoundTool.ReplaceAudioClip("Scan", killClips[0]);
         }
 
         public static void LogMessage(string message, LogLevel logLevel = LogLevel.Debug)

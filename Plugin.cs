@@ -48,11 +48,25 @@ namespace BrandonLeeBracken
             LoadCustomAudioClips();
             // AssetBundle.UnloadAllAssetBundles(false);
 
-            SoundTool.ReplaceAudioClip("Scan", testClip, 1f);
-
             // harmony.PatchAll(typeof(BrandonLeeBrackenBase));
             harmony.PatchAll(typeof(FlowerManPatch));
             // harmony.PatchAll(typeof(PlayerControllerBPatch));
+        }
+
+        private void Start()
+        {
+            SoundTool.ReplaceAudioClip("Scan", testClip, 1f);
+
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
+            {
+                SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
+                SoundTool.ReplaceAudioClip("FlowermanStun", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
+            }
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.killClips)
+            {
+                SoundTool.ReplaceAudioClip("CrackNeck", audioClip, 1f / BrandonLeeBrackenBase.Instance.killClips.Count);
+            }
+            SoundTool.ReplaceAudioClip("Angered", BrandonLeeBrackenBase.Instance.angryClip, 1f);
         }
 
         private void LoadCustomTextures()

@@ -1,12 +1,14 @@
 ﻿using HarmonyLib;
 using LCSoundTool;
+using System.Collections;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace BrandonLeeBracken.Patches
 {
     // will apply patch to "FlowermanAI" script
     [HarmonyPatch(typeof(FlowermanAI))]
-    internal class FlowerManPatch
+    internal static class FlowerManPatch
     {
         // adds this snippet at the end of "Start" method
         [HarmonyPatch("Start"), HarmonyPostfix]
@@ -26,12 +28,10 @@ namespace BrandonLeeBracken.Patches
             spriteRenderer.sprite = BrandonLeeBrackenBase.Instance.relaxedSprite;
 
             // TESTING
-            __instance.transform.localScale = Vector3.one;
-            if (BrandonLeeBrackenBase.Instance.killClips[0] != null)
-                AudioSource.PlayClipAtPoint(BrandonLeeBrackenBase.Instance.killClips[0], __instance.transform.position);
+            __instance.transform.localScale = new Vector3(.75f, .75f, .75f);
 
             // setup new audio
-            // chances are (1f / number of  clips) for easy dynamic size of clips lists
+            // chances are (1f / number of  clips) to allow dynamic size of clips lists
             /*
             foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
                 SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
@@ -43,7 +43,6 @@ namespace BrandonLeeBracken.Patches
             BrandonLeeBrackenBase.LogMessage("Done!", BepInEx.Logging.LogLevel.Debug);
         }
 
-        /*
         [HarmonyPatch("Update"), HarmonyPostfix]
         internal static void UpdatePostFix(ref FlowermanAI __instance)
         {
@@ -52,6 +51,5 @@ namespace BrandonLeeBracken.Patches
                 BepInEx.Logging.LogLevel.Debug
             );
         }
-        */
     }
 }

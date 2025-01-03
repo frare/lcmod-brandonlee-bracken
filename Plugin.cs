@@ -1,8 +1,8 @@
-﻿using BepInEx;
+﻿using LCSoundTool;
+using BepInEx;
 using BepInEx.Logging;
 using BrandonLeeBracken.Patches;
 using HarmonyLib;
-using LCSoundTool;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -30,10 +30,12 @@ namespace BrandonLeeBracken
 
         // custom assets
         public static AssetBundle CustomTextures, CustomAudio;
-        internal Texture2D relaxedTexture, fleeingTexture, angryTexture;
-        internal List<AudioClip> relaxedClips = new List<AudioClip>();
+        internal Sprite relaxedSprite, fleeingSprite, angrySprite;
         internal List<AudioClip> fleeingClips = new List<AudioClip>();
-        internal List<AudioClip> angryClips = new List<AudioClip>();
+        internal List<AudioClip> killClips = new List<AudioClip>();
+        internal AudioClip angryClip;
+
+        internal AudioClip testClip;
 
         private void Awake()
         {
@@ -44,12 +46,27 @@ namespace BrandonLeeBracken
 
             LoadCustomTextures();
             LoadCustomAudioClips();
+            // AssetBundle.UnloadAllAssetBundles(false);
 
-            // SoundTool.ReplaceAudioClip("Scan", BrandonLeeBrackenBase.Instance.relaxedClips[0]);
-
-            harmony.PatchAll(typeof(BrandonLeeBrackenBase));
+            // harmony.PatchAll(typeof(BrandonLeeBrackenBase));
             harmony.PatchAll(typeof(FlowerManPatch));
             // harmony.PatchAll(typeof(PlayerControllerBPatch));
+        }
+
+        private void Start()
+        {
+            SoundTool.ReplaceAudioClip("Scan", testClip, 1f);
+
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
+            {
+                SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
+                SoundTool.ReplaceAudioClip("FlowermanStun", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
+            }
+            foreach (var audioClip in BrandonLeeBrackenBase.Instance.killClips)
+            {
+                SoundTool.ReplaceAudioClip("CrackNeck", audioClip, 1f / BrandonLeeBrackenBase.Instance.killClips.Count);
+            }
+            SoundTool.ReplaceAudioClip("Angered", BrandonLeeBrackenBase.Instance.angryClip, 1f);
         }
 
         private void LoadCustomTextures()
@@ -64,15 +81,20 @@ namespace BrandonLeeBracken
 
             foreach (string assetName in CustomTextures.GetAllAssetNames())
             {
-                if (assetName.Contains("relaxed")) relaxedTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
-                else if (assetName.Contains("fleeing")) fleeingTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
-                else if (assetName.Contains("angry")) angryTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
+                logger.LogDebug("Found asset: " + assetName);
+
+                Texture2D texture = CustomTextures.LoadAsset<Texture2D>(assetName);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, 0f));
+
+                if (assetName.Contains("relaxed")) relaxedSprite = sprite;
+                else if (assetName.Contains("fleeing")) fleeingSprite = sprite;
+                else if (assetName.Contains("angry")) angrySprite = sprite;
                 else logger.LogWarning("Found an asset in texture bundle that does not match any category");
             }
             
-            if (relaxedTexture == null || fleeingTexture == null || angryTexture == null)
+            if (relaxedSprite == null || fleeingSprite == null || angrySprite == null)
                 logger.LogError("Failed to load custom textures");
-            else 
+            else
                 logger.LogDebug("Custom textures loaded!");
         }
 
@@ -88,16 +110,24 @@ namespace BrandonLeeBracken
 
             foreach (string assetName in CustomAudio.GetAllAssetNames())
             {
-                if (assetName.Contains("relaxed")) relaxedClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
-                else if (assetName.Contains("fleeing")) fleeingClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
-                else if (assetName.Contains("angry")) angryClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
+                logger.LogDebug("Found asset: " + assetName);
+
+                if (assetName.Contains("fleeing")) fleeingClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
+                else if (assetName.Contains("kill")) killClips.Add(CustomAudio.LoadAsset<AudioClip>(assetName));
+                else if (assetName.Contains("angry")) angryClip = CustomAudio.LoadAsset<AudioClip>(assetName);
+                else if (assetName.Contains("test")) testClip = CustomAudio.LoadAsset<AudioClip>(assetName);
                 else logger.LogWarning("Found an asset in audio bundle that does not match any category");
             }
 
-            if (relaxedClips.Count == 0 || fleeingClips.Count == 0 || angryClips.Count == 0)
+            if (fleeingClips.Count == 0 || killClips.Count == 0 || angryClip == null)
                 logger.LogError("Failed to load custom audio");
             else
                 logger.LogDebug("Custom audio loaded!");
+        }
+
+        public AudioClip GetRandomFleeingAudioClip()
+        {
+            return fleeingClips[Random.Range(0, Instance.fleeingClips.Count)];
         }
 
         public static void LogMessage(string message, LogLevel logLevel = LogLevel.Debug)

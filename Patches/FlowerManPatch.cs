@@ -10,6 +10,7 @@ namespace BrandonLeeBracken.Patches
     [HarmonyPatch(typeof(FlowermanAI))]
     internal static class FlowerManPatch
     {
+        #region Harmony patches
         // adds this snippet at the end of "Start" method
         [HarmonyPatch("Start"), HarmonyPostfix]
         internal static void StartPostfix(ref FlowermanAI __instance)
@@ -25,31 +26,68 @@ namespace BrandonLeeBracken.Patches
 
             // add Jackie Chan sprite renderer
             var spriteRenderer = __instance.gameObject.AddComponent<SpriteRenderer>();
+            __instance.SetSpriteRenderer(spriteRenderer);
             spriteRenderer.sprite = BrandonLeeBrackenBase.Instance.relaxedSprite;
 
             // TESTING
             __instance.transform.localScale = new Vector3(.75f, .75f, .75f);
 
-            // setup new audio
-            // chances are (1f / number of  clips) to allow dynamic size of clips lists
-            /*
-            foreach (var audioClip in BrandonLeeBrackenBase.Instance.fleeingClips)
-                SoundTool.ReplaceAudioClip("Found1", audioClip, 1f / BrandonLeeBrackenBase.Instance.fleeingClips.Count);
-            foreach (var audioClip in BrandonLeeBrackenBase.Instance.killClips)
-                SoundTool.ReplaceAudioClip("CrackNeck", audioClip, 1f / BrandonLeeBrackenBase.Instance.killClips.Count);
-            SoundTool.ReplaceAudioClip("Angered", BrandonLeeBrackenBase.Instance.angryClip, 1f);
-            */
-
             BrandonLeeBrackenBase.LogMessage("Done!", BepInEx.Logging.LogLevel.Debug);
         }
 
-        [HarmonyPatch("Update"), HarmonyPostfix]
-        internal static void UpdatePostFix(ref FlowermanAI __instance)
+        [HarmonyPatch(typeof(EnemyAI), "SwitchToBehaviourStateOnLocalClient"), HarmonyPostfix]
+        internal static void SwitchToStatePostfix(ref EnemyAI __instance, int stateIndex)
         {
-            BrandonLeeBrackenBase.LogMessage(
-                $"Current behaviour state: {__instance.currentBehaviourStateIndex}", 
-                BepInEx.Logging.LogLevel.Debug
-            );
+            // prevents other EnemyAI to execute this code
+            FlowermanAI __newInstance = (FlowermanAI)__instance;
+            if (__newInstance == null) return;
+
+            // 0 is stalking
+            // 1 is retreating
+            // 2 is angered
+            switch (stateIndex)
+            {
+                case 0:
+                    __newInstance.GetSpriteRenderer().sprite = BrandonLeeBrackenBase.Instance.relaxedSprite;
+                    break;
+
+                case 1:
+                    __newInstance.GetSpriteRenderer().sprite = BrandonLeeBrackenBase.Instance.fleeingSprite;
+                    __newInstance.creatureSFX.PlayOneShot(BrandonLeeBrackenBase.Instance.GetRandomFleeingAudioClip(), 2f);
+                    break;
+
+                case 2:
+                    __newInstance.GetSpriteRenderer().sprite = BrandonLeeBrackenBase.Instance.angrySprite;
+                    break;
+            }
         }
+        #endregion
+
+
+
+        #region Variables "patch"
+        // in reality what this does is create static variables for each instance of this class
+        // and allows them to be manipulated, simulating class fields like they would be present in the original
+
+        // dictionary to store the custom variables for each instance
+        private static readonly ConditionalWeakTable<FlowermanAI, VariableContainer> Variables = new ConditionalWeakTable<FlowermanAI, VariableContainer>();
+
+        // class to hold custom variables
+        private class VariableContainer
+        {
+            public SpriteRenderer spriteRenderer;
+        }
+
+        // getters and setters for custom variables
+        public static SpriteRenderer GetSpriteRenderer(this FlowermanAI instance)
+        {
+            return Variables.GetOrCreateValue(instance).spriteRenderer;
+        }
+
+        public static void SetSpriteRenderer(this FlowermanAI instance, SpriteRenderer value)
+        {
+            Variables.GetOrCreateValue(instance).spriteRenderer = value;
+        }
+        #endregion
     }
 }

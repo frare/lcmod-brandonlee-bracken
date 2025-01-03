@@ -125,6 +125,11 @@ namespace BrandonLeeBracken
                 logger.LogDebug("Custom audio loaded!");
         }
 
+        public AudioClip GetRandomFleeingAudioClip()
+        {
+            return fleeingClips[Random.Range(0, Instance.fleeingClips.Count)];
+        }
+
         public static void LogMessage(string message, LogLevel logLevel = LogLevel.Debug)
         {
             Instance.logger.Log(logLevel, message);

@@ -17,16 +17,13 @@ namespace BrandonLeeBracken.Patches
                 BepInEx.Logging.LogLevel.Debug
             );
 
-            // disable default mesh renderers
-            foreach (var mesh in __instance.GetComponentsInChildren<Renderer>())
-            {
-                mesh.enabled = false;
-            }
+            // disable components that won't be used
+            __instance.GetComponentInChildren<Animator>().enabled = false;
+            __instance.GetComponentsInChildren<Renderer>().Do(renderer => renderer.enabled = false);
 
-            // add Jackie Chan sprite
+            // add Jackie Chan sprite renderer
             var spriteRenderer = __instance.gameObject.AddComponent<SpriteRenderer>();
-            var texture = BrandonLeeBrackenBase.Instance.relaxedTexture;
-            spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, 0f));
+            spriteRenderer.sprite = BrandonLeeBrackenBase.Instance.relaxedSprite;
 
             // size testing
             __instance.transform.localScale = Vector3.one;

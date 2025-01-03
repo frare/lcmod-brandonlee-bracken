@@ -30,10 +30,10 @@ namespace BrandonLeeBracken
 
         // custom assets
         public static AssetBundle CustomTextures, CustomAudio;
-        internal Texture2D relaxedTexture, fleeingTexture, angryTexture;
-        internal List<AudioClip> relaxedClips = new List<AudioClip>();
+        internal Sprite relaxedSprite, fleeingSprite, angrySprite;
         internal List<AudioClip> fleeingClips = new List<AudioClip>();
-        internal List<AudioClip> angryClips = new List<AudioClip>();
+        internal List<AudioClip> killClips = new List<AudioClip>();
+        internal AudioClip angryClip;
 
         private void Awake()
         {
@@ -64,15 +64,18 @@ namespace BrandonLeeBracken
 
             foreach (string assetName in CustomTextures.GetAllAssetNames())
             {
-                if (assetName.Contains("relaxed")) relaxedTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
-                else if (assetName.Contains("fleeing")) fleeingTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
-                else if (assetName.Contains("angry")) angryTexture = CustomTextures.LoadAsset<Texture2D>(assetName);
+                Texture2D texture = CustomTextures.LoadAsset<Texture2D>(assetName);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, 0f));
+
+                if (assetName.Contains("relaxed")) relaxedSprite = sprite;
+                else if (assetName.Contains("fleeing")) fleeingSprite = sprite;
+                else if (assetName.Contains("angry")) angrySprite = sprite;
                 else logger.LogWarning("Found an asset in texture bundle that does not match any category");
             }
             
-            if (relaxedTexture == null || fleeingTexture == null || angryTexture == null)
+            if (relaxedSprite == null || fleeingSprite == null || angrySprite == null)
                 logger.LogError("Failed to load custom textures");
-            else 
+            else
                 logger.LogDebug("Custom textures loaded!");
         }
 
